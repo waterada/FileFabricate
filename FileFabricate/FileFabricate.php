@@ -124,6 +124,9 @@ class FileFabricateFile {
         $this->path = $path;
     }
 
+    /**
+     * @return string
+     */
     public function getPath() {
         // 未作成なら作成する
         if (empty($this->path)) {
