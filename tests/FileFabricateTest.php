@@ -1,14 +1,14 @@
 <?php
 /** @noinspection PhpIncludeInspection */
-require_once realpath(dirname(dirname(dirname(dirname(__FILE__)))) . "/vendor/autoload.php");
+require_once realpath(dirname(dirname(__FILE__)) . "/vendor/autoload.php");
 /** @noinspection PhpIncludeInspection */
-require_once realpath(dirname(dirname(dirname(dirname(__FILE__)))) . "/FileFabricate/FileFabricate.php");
+require_once realpath(dirname(dirname(__FILE__)) . "/src/FileFabricate.php");
 
 
 class FileFabricateTest extends PHPUnit_Framework_TestCase {
     public function setUp() {
         parent::setUp();
-        FileFabricate::$dir = dirname(dirname(dirname(__FILE__))) . "/tmp";
+        FileFabricate::$dir = dirname(__FILE__) . "/tmp";
     }
 
     public function tearDown() {

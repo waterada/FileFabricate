@@ -9,4 +9,4 @@ before_script:
   - composer install
 
 script:
-  - vendor/bin/phpunit Test/Case/TestSuite/FileFabricateTest.php --stderr
+  - vendor/bin/phpunit tests/FileFabricateTest.php --stderr
