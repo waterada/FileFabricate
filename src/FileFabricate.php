@@ -16,6 +16,10 @@ class FileFabricate {
     public static function fromString($string) {
         return new FileFabricateFile($string);
     }
+
+    public static function defineTemplate() {
+        return new FileFabricateTemplate();
+    }
 }
 
 
@@ -29,13 +33,19 @@ class FileFabricateDataCells {
 
     private $withoutBrAtEof = false;
 
+    private $changes = [];
+
     public function __construct($cells) {
         $this->cells = $cells;
     }
 
+    protected function _getCells() {
+        return $this->cells;
+    }
+
     public function toCsv($delimiter = ',', $enclosure = '"') {
-        $cells = $this->cells;
-        return new FileFabricateFile(function() use ($cells, $delimiter, $enclosure) {
+        $cells = $this->_getCells();
+        return new FileFabricateFile(function () use ($cells, $delimiter, $enclosure) {
             $str = "";
             foreach ($cells as $row) {
                 $fh_memory = fopen("php://memory", "rw");
@@ -58,12 +68,37 @@ class FileFabricateDataCells {
 
     /**
      * ファイル末尾には末尾の改行コードをつけない。
+     *
      * @return $this
      */
     public function withoutBrAtEof() {
         $this->withoutBrAtEof = true;
         return $this;
     }
+
+    public function changeValue($i, $label, $value) {
+        $col = array_search($label, $this->cells[0]);
+        if ($col === FALSE) {
+            throw new LogicException("Unkown Label: " . $label);
+        }
+        $this->cells[$i][$col] = $value;
+        return $this;
+    }
+}
+
+/**
+ * Class FileFabricateDataTemplate
+ *
+ * csv/tsv を作成するためのテンプレートデータ
+ */
+class FileFabricateDataTemplate extends FileFabricateDataCells {
+    private $template;
+
+    public function __construct($template) {
+        $this->template = $template;
+    }
+
+
 }
 
 /**
@@ -162,11 +197,9 @@ class FileFabricateFile {
     private function __tempnum() {
         if (!empty($this->directory)) {
             $TMP_DIR = $this->directory;
-        }
-        elseif (!empty(FileFabricate::$dir)) {
+        } elseif (!empty(FileFabricate::$dir)) {
             $TMP_DIR = FileFabricate::$dir;
-        }
-        else {
+        } else {
             $TMP_DIR = sys_get_temp_dir();
         }
 
@@ -194,5 +227,96 @@ class FileFabricateFile {
                 //CakeLog::write(LOG_DEBUG, "[tempfile remove] " . $path);
             }
         });
+    }
+}
+
+
+class FileFabricateTemplate {
+    private static $base_str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    /** @var FileFabricateFabricatorByLabel[]|mixed */
+    public $definition = null;
+
+    public function value_integer($max = null) {
+        return $this->value_callback(function ($i) use ($max) {
+            if ($max === null) {
+                $row = $i + 1;
+            } else {
+                $row = $i % $max + 1; //maxが指定されたらmax内をループする
+            }
+            return $row;
+        });
+    }
+
+    public function value_string($size) {
+        $base = self::$base_str;
+        return $this->value_callback(function ($i) use ($size, $base) {
+            $pos = $i % strlen($base);
+            return str_repeat($base[$pos], $size);
+        });
+    }
+
+    public function value_date($format = 'Y-m-d H:i:s', $basedate = '2000-01-01 00:00:00') {
+        return $this->value_callback(function ($i) use ($format, $basedate) {
+            return date($format, strtotime($basedate) + $i * 3600 * 24);
+        });
+    }
+
+    public function value_rotation($array) {
+        return $this->value_callback(function ($i) use ($array) {
+            $pos = $i % count($array);
+            return $array[$pos];
+        });
+    }
+
+    public function value_callback($callback) {
+        return new FileFabricateFabricatorByLabel($callback);
+    }
+
+    public function rows($count) {
+        $data = [];
+        //ラベル出力
+        $data[] = array_keys($this->definition);
+        //値出力
+        for ($i = 0; $i < $count; $i++) {
+            $line = [];
+            foreach ($this->definition as $label => $value) {
+                if (is_array($value)) {
+                    $value = $this->value_rotation($value);
+                }
+                if ($value instanceof FileFabricateFabricatorByLabel) {
+                    $value = $value->_getValue($i);
+                }
+                $line[] = $value;
+            }
+            $data[] = $line;
+        }
+        return new FileFabricateDataCells($data);
+    }
+}
+
+
+class FileFabricateFabricatorByLabel {
+    /** @var callable */
+    private $callback = null;
+
+    private $format = null;
+
+    public function __construct($callback) {
+        $this->callback = $callback;
+    }
+
+    public function format($format = '%s') {
+        $this->format = $format;
+        return $this;
+    }
+
+    public function _getValue($i) {
+        $callback = $this->callback;
+        $value = $callback($i);
+        if ($this->format !== null) {
+            $value = sprintf($this->format, $value);
+        }
+        return $value;
     }
 }

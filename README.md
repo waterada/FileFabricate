@@ -53,4 +53,27 @@ $path = FileFabricate::fromString("あいうえお")->getPath();
 
 // テンポラリファイルの保存場所を今回だけ変更したい場合 (In case of changing the directory to save the file in this time.)
 $path = FileFabricate::fromString("あいうえお")->moveDirectoryTo("/var/tmp")->getPath();
+
+// テンプレートを定義して動的に作成することも可能 (You may make the template to fabricate data.)
+$template = FileFabricate::defineTemplate();
+$template->definition = [
+    'label 1' => $template->value_integer(15),
+    'label 2' => $template->value_string(15)->format('%s@aaa.com'),
+    'label 3' => $template->value_date('Y-m-d'),
+    'label 4' => $template->value_rotation(["T", "F"]),
+    'label 5' => $template->value_callback(function($i) { return $i; }),
+    'label 6' => ["T", "F"],
+    'label 7' => range(1, 12),
+    'label 8' => "aaa",
+    'label 9' => 1,
+];
+$path = $template->rows(15)->change_value(3, 'label 8', "bbb")->toCsv()->getPath();
+
+// テンプレートで生成した値の一部の変更も可能 (You may change the value which you fabricate.)
+$template = FileFabricate::defineTemplate();
+$template->definition = [
+    'label 1' => $template->value_integer(4),
+    'label 2' => $template->value_string(3),
+];
+$path = $template->rows(5)->change_value(3, 'label 2', "ccc")->toCsv()->getPath();
 ```

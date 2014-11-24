@@ -200,5 +200,52 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
 //        ])->changeValue(["label 1" => "あい"], "label 2", "がぎ")->toCsv()->getPath();
 //        $this->assertEquals("あい,うえ\nがぎ,くけ\n", file_get_contents($path));
 //    }
+
+
+    public function test_データをテンプレートから作成できる() {
+        $template = FileFabricate::defineTemplate();
+        $template->definition = [
+            'label 1' => $template->value_integer(4),
+            'label 2' => $template->value_string(3)->format('%s@aaa.com'),
+            'label 3' => $template->value_date('Y-m-d H'),
+            'label 4' => $template->value_rotation(["T", "F"]),
+            'label 5' => $template->value_callback(function ($i) {
+                    return "i:" . $i;
+                }),
+            'label 6' => ["t", "f"],
+            'label 7' => range(1, 5),
+            'label 8' => "zzz",
+            'label 9' => 99,
+        ];
+        $path = $template->rows(10)->toCsv()->getPath();
+        $expected = '"label 1","label 2","label 3","label 4","label 5","label 6","label 7","label 8","label 9"' . "\n" .
+            "1,AAA@aaa.com,\"2000-01-01 00\",T,i:0,t,1,zzz,99\n" .
+            "2,BBB@aaa.com,\"2000-01-02 00\",F,i:1,f,2,zzz,99\n" .
+            "3,CCC@aaa.com,\"2000-01-03 00\",T,i:2,t,3,zzz,99\n" .
+            "4,DDD@aaa.com,\"2000-01-04 00\",F,i:3,f,4,zzz,99\n" .
+            "1,EEE@aaa.com,\"2000-01-05 00\",T,i:4,t,5,zzz,99\n" .
+            "2,FFF@aaa.com,\"2000-01-06 00\",F,i:5,f,1,zzz,99\n" .
+            "3,GGG@aaa.com,\"2000-01-07 00\",T,i:6,t,2,zzz,99\n" .
+            "4,HHH@aaa.com,\"2000-01-08 00\",F,i:7,f,3,zzz,99\n" .
+            "1,III@aaa.com,\"2000-01-09 00\",T,i:8,t,4,zzz,99\n" .
+            "2,JJJ@aaa.com,\"2000-01-10 00\",F,i:9,f,5,zzz,99\n" ;
+        $this->assertEquals($expected, file_get_contents($path));
+    }
+
+   public function test_テンプレートで生成した値の一部を変更できる() {
+       $template = FileFabricate::defineTemplate();
+       $template->definition = [
+           'label 1' => $template->value_integer(4),
+           'label 2' => $template->value_string(3),
+       ];
+       $path = $template->rows(5)->changeValue(3, 'label 2', "ccc")->toCsv()->getPath();
+       $expected = '"label 1","label 2"' . "\n" .
+           "1,AAA\n" .
+           "2,BBB\n" .
+           "3,ccc\n" .
+           "4,DDD\n" .
+           "1,EEE\n" ;
+       $this->assertEquals($expected, file_get_contents($path));
+   }
 }
  
