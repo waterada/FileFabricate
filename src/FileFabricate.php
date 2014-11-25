@@ -71,15 +71,23 @@ class FileFabricateDataCells {
 
     private $withoutBrAtEof = false;
 
+    private $changes = [];
+
     public function __construct($cells) {
         $this->cells = $cells;
     }
 
     public function toCsv($delimiter = ',', $enclosure = '"') {
-        $cells = $this->cells;
-        return new FileFabricateFile(function () use ($cells, $delimiter, $enclosure) {
+        $_this = $this;
+        return new FileFabricateFile(function () use ($_this, $delimiter, $enclosure) {
+            if (!empty($this->changes)) {
+                foreach ($this->changes as $change) {
+                    list($i, $col, $value) = $change;
+                    $_this->cells[$i][$col] = $value;
+                }
+            }
             $fh_memory = fopen("php://memory", "rw");
-            foreach ($cells as $row) {
+            foreach ($_this->cells as $row) {
                 fputcsv($fh_memory, $row, $delimiter, $enclosure);
             }
             $size = ftell($fh_memory);
@@ -112,7 +120,12 @@ class FileFabricateDataCells {
         if ($col === FALSE) {
             throw new LogicException("Unkown Label: " . $label);
         }
-        $this->cells[$i][$col] = $value;
+        if (count($this->cells) < $i) {
+            throw new LogicException("More than the number of rows (" . count($this->cells) . ") : " . $i);
+        }
+
+        $this->changes[] = [$i, $col, $value];
+
         return $this;
     }
 }
