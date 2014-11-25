@@ -79,35 +79,39 @@ class FileFabricateDataCells {
     private $cells; //２次元配列
 
     private $withoutBrAtEof = false;
-
     private $changes = [];
+    private $delimiter;
+    private $enclosure;
 
     public function __construct($cells) {
         $this->cells = $cells;
     }
 
     public function toCsv($delimiter = ',', $enclosure = '"') {
-        $_this = $this;
-        return new FileFabricateFile(function () use ($_this, $delimiter, $enclosure) {
-            if (!empty($this->changes)) {
-                foreach ($this->changes as $change) {
-                    list($i, $col, $value) = $change;
-                    $_this->cells[$i][$col] = $value;
-                }
+        $this->delimiter = $delimiter;
+        $this->enclosure = $enclosure;
+        return new FileFabricateFile($this);
+    }
+
+    public function __toString() {
+        if (!empty($this->changes)) {
+            foreach ($this->changes as $change) {
+                list($i, $col, $value) = $change;
+                $this->cells[$i][$col] = $value;
             }
-            $fh_memory = fopen("php://memory", "rw");
-            foreach ($_this->cells as $row) {
-                fputcsv($fh_memory, $row, $delimiter, $enclosure);
-            }
-            $size = ftell($fh_memory);
-            fseek($fh_memory, 0);
-            $str = fread($fh_memory, $size);
-            fclose($fh_memory);
-            if ($this->withoutBrAtEof) {
-                $str = preg_replace('/\n$/', "", $str);
-            }
-            return $str;
-        });
+        }
+        $fh_memory = fopen("php://memory", "rw");
+        foreach ($this->cells as $row) {
+            fputcsv($fh_memory, $row, $this->delimiter, $this->enclosure);
+        }
+        $size = ftell($fh_memory);
+        fseek($fh_memory, 0);
+        $str = fread($fh_memory, $size);
+        fclose($fh_memory);
+        if ($this->withoutBrAtEof) {
+            $str = preg_replace('/\n$/', "", $str);
+        }
+        return $str;
     }
 
     public function toTsv($delimiter = "\t", $enclosure = '"') {
@@ -154,7 +158,7 @@ class FileFabricateFileSettings {
  */
 class FileFabricateFile {
 
-    /** @var string|callable */
+    /** @var string|FileFabricateDataCells */
     private $data;
 
     /** @var FileFabricateFileSettings */
@@ -163,7 +167,7 @@ class FileFabricateFile {
     private $path = null; //作成済みのファイルパス
 
     /**
-     * @param string|callable $data
+     * @param string|FileFabricateDataCells $data
      */
     public function __construct($data) {
         $this->settings = new FileFabricateFileSettings();
@@ -194,6 +198,16 @@ class FileFabricateFile {
         return $this;
     }
 
+    public function changeValue($i, $label, $value) {
+        if ($this->data instanceof FileFabricateDataCells) {
+            $this->data->changeValue($i, $label, $value);
+        } else {
+            throw new LogicException("Cannot changeValue if not FileFabricateDataCells.");
+        }
+        $this->__resetFile();
+        return $this;
+    }
+
     private function __resetFile() {
         $this->settings->alreadyMade = false;
     }
@@ -217,8 +231,8 @@ class FileFabricateFile {
 
             //データ取得
             $str = $this->data;
-            if (is_callable($str)) {
-                $str = $str();
+            if ($str instanceof FileFabricateDataCells) {
+                $str = $str->__toString();
             }
 
             //文字コード変換

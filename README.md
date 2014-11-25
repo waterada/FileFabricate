@@ -29,6 +29,10 @@ $path = FileFabricate::from2DimensionalArray([
 $path = FileFabricate::fromString("あいうえお")->getPath();
 
 
+// 外部CSVファイルから作成 (Making from a csv file.)
+$path = FileFabricate::fromCsv("/path")->getPath();
+
+
 // CSVでなくTSVで出力 (Outputing as tsv instead of csv.)
 $path = FileFabricate::from2DimensionalArray([
     ["あい", "うえ"],
@@ -85,4 +89,12 @@ $template = FileFabricate::defineTemplate([
     'label 2' => FileFabricate::value_string(3),
 ]);
 $path = $template->rows(5)->change_value(3, 'label 2', "ccc")->toCsv()->getPath();
+
+
+// 文字コードを指定した後に生成した値を変更することも可能 (You may change the value after specifying encoding.)
+$template = FileFabricate::defineTemplate([
+    'label 1' => FileFabricate::value_integer(4),
+    'label 2' => FileFabricate::value_string(3),
+])->rows(5)->toCsv()->encodeTo("UTF-16LE");
+$path = $template->change_value(3, 'label 2', "ccc")->getPath();
 ```
