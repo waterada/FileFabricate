@@ -70,49 +70,6 @@ class FileFabricate {
     }
 }
 
-
-class FileFabricateFileSettings {
-    public $encodeTo = 'UTF-8';
-    public $bom = null;
-    public $directory = null;
-    public $filename = null;
-    public $alreadyMade = false;
-}
-
-trait FileFabricateFileSettingsSetter {
-    /** @var FileFabricateFileSettings */
-    protected $settings;
-
-    public function encodeTo($encoding) {
-        $this->settings->encodeTo = $encoding;
-        $this->__resetFile();
-        return $this;
-    }
-
-    public function prependUtf8Bom() {
-        $this->settings->bom = "\xef\xbb\xbf";
-        $this->__resetFile();
-        return $this;
-    }
-
-    public function moveDirectoryTo($directory) {
-        $this->settings->directory = $directory;
-        $this->__resetFile();
-        return $this;
-    }
-
-    public function changeFileNameTo($filename) {
-        $this->settings->filename = $filename;
-        $this->__resetFile();
-        return $this;
-    }
-
-    private function __resetFile() {
-        $this->settings->alreadyMade = false;
-    }
-}
-
-
 /**
  * Class FileFabricateDataCells
  *
@@ -182,16 +139,26 @@ class FileFabricateDataCells {
     }
 }
 
+class FileFabricateFileSettings {
+    public $encodeTo = 'UTF-8';
+    public $bom = null;
+    public $directory = null;
+    public $filename = null;
+    public $alreadyMade = false;
+}
+
 /**
  * Class FileFabricateFile
  *
  * ファイル出力可能な文字列データ
  */
 class FileFabricateFile {
-    use FileFabricateFileSettingsSetter;
 
     /** @var string|callable */
     private $data;
+
+    /** @var FileFabricateFileSettings */
+    protected $settings;
 
     private $path = null; //作成済みのファイルパス
 
@@ -203,9 +170,37 @@ class FileFabricateFile {
         $this->data = $data;
     }
 
+    public function encodeTo($encoding) {
+        $this->settings->encodeTo = $encoding;
+        $this->__resetFile();
+        return $this;
+    }
+
+    public function prependUtf8Bom() {
+        $this->settings->bom = "\xef\xbb\xbf";
+        $this->__resetFile();
+        return $this;
+    }
+
+    public function moveDirectoryTo($directory) {
+        $this->settings->directory = $directory;
+        $this->__resetFile();
+        return $this;
+    }
+
+    public function changeFileNameTo($filename) {
+        $this->settings->filename = $filename;
+        $this->__resetFile();
+        return $this;
+    }
+
+    private function __resetFile() {
+        $this->settings->alreadyMade = false;
+    }
+
     private function makeFileIfNotExist() {
         //作成済みなら省略
-        if (!empty($this->path)) {
+        if ($this->settings->alreadyMade) {
             return;
         }
         //ファイルパス生成
