@@ -73,10 +73,6 @@ trait FileFabricateFileSettingsSetter {
     /** @var FileFabricateFileSettings */
     protected $settings;
 
-    private function __initFileSettings() {
-        $this->settings = new FileFabricateFileSettings();
-    }
-
     public function encodeTo($encoding) {
         $this->settings->encodeTo = $encoding;
         $this->__resetFile();
@@ -113,7 +109,7 @@ trait FileFabricateFileSettingsSetter {
  * csv/tsv を作成できる２次元データ
  */
 class FileFabricateDataCells {
-    private $cells = null; //２次元配列
+    private $cells; //２次元配列
 
     private $withoutBrAtEof = false;
 
@@ -185,7 +181,7 @@ class FileFabricateFile {
     use FileFabricateFileSettingsSetter;
 
     /** @var string|callable */
-    private $data; //２次元配列
+    private $data;
 
     private $path = null; //作成済みのファイルパス
 
@@ -193,8 +189,8 @@ class FileFabricateFile {
      * @param string|callable $data
      */
     public function __construct($data) {
+        $this->settings = new FileFabricateFileSettings();
         $this->data = $data;
-        $this->__initFileSettings();
     }
 
     private function makeFileIfNotExist() {
@@ -245,8 +241,8 @@ class FileFabricateFile {
     }
 
     private function __tempnum() {
-        if (!empty($this->directory)) {
-            $TMP_DIR = $this->directory;
+        if (!empty($this->settings->directory)) {
+            $TMP_DIR = $this->settings->directory;
         } elseif (!empty(FileFabricate::$dir)) {
             $TMP_DIR = FileFabricate::$dir;
         } else {
@@ -257,8 +253,8 @@ class FileFabricateFile {
         $this->__register_shutdown_remove_file($path);
         //CakeLog::write(LOG_DEBUG, "[tempfile create] " . $path);
 
-        if (!empty($this->filename)) {
-            $path2 = $TMP_DIR . "/" . $this->filename;
+        if (!empty($this->settings->filename)) {
+            $path2 = $TMP_DIR . "/" . $this->settings->filename;
             if (file_exists($path2)) {
                 throw new LogicException("Already exists: " . $path2);
             }
