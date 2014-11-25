@@ -19,6 +19,16 @@ class FileFabricate {
         return new FileFabricateFile($string);
     }
 
+    public static function fromCsv($path, $delimiter = ',', $enclosure = '"') {
+        $data = [];
+        $fh = fopen($path, "r");
+        $maxsize = filesize($path);
+        while (($line = fgetcsv($fh, $maxsize, $delimiter, $enclosure)) !== FALSE) {
+            $data[] = $line;
+        }
+        return new FileFabricateDataCells($data);
+    }
+
     public static function defineTemplate($definition) {
         return new FileFabricateTemplate($definition);
     }

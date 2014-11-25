@@ -209,8 +209,8 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
             'label 3' => FileFabricate::value_date('Y-m-d H'),
             'label 4' => FileFabricate::value_rotation(["T", "F"]),
             'label 5' => FileFabricate::value_callback(function ($i) {
-                    return "i:" . $i;
-                }),
+                return "i:" . $i;
+            }),
             'label 6' => ["t", "f"],
             'label 7' => range(1, 5),
             'label 8' => "zzz",
@@ -227,23 +227,50 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
             "3,GGG@aaa.com,\"2000-01-07 00\",T,i:6,t,2,zzz,99\n" .
             "4,HHH@aaa.com,\"2000-01-08 00\",F,i:7,f,3,zzz,99\n" .
             "1,III@aaa.com,\"2000-01-09 00\",T,i:8,t,4,zzz,99\n" .
-            "2,JJJ@aaa.com,\"2000-01-10 00\",F,i:9,f,5,zzz,99\n" ;
+            "2,JJJ@aaa.com,\"2000-01-10 00\",F,i:9,f,5,zzz,99\n";
         $this->assertEquals($expected, file_get_contents($path));
     }
 
-   public function test_テンプレートで生成した値の一部を変更できる() {
-       $template = FileFabricate::defineTemplate([
-           'label 1' => FileFabricate::value_integer(4),
-           'label 2' => FileFabricate::value_string(3),
-       ]);
-       $path = $template->rows(5)->changeValue(3, 'label 2', "ccc")->toCsv()->getPath();
-       $expected = '"label 1","label 2"' . "\n" .
-           "1,AAA\n" .
-           "2,BBB\n" .
-           "3,ccc\n" .
-           "4,DDD\n" .
-           "1,EEE\n" ;
-       $this->assertEquals($expected, file_get_contents($path));
-   }
+    public function test_テンプレートで生成した値の一部を変更できる() {
+        $template = FileFabricate::defineTemplate([
+            'label 1' => FileFabricate::value_integer(4),
+            'label 2' => FileFabricate::value_string(3),
+        ]);
+        $path = $template->rows(5)->changeValue(3, 'label 2', "ccc")->toCsv()->getPath();
+        $expected = '"label 1","label 2"' . "\n" .
+            "1,AAA\n" .
+            "2,BBB\n" .
+            "3,ccc\n" .
+            "4,DDD\n" .
+            "1,EEE\n";
+        $this->assertEquals($expected, file_get_contents($path));
+    }
+
+    public function test_csvファイルから生成できる() {
+        $path = FileFabricate::from2DimensionalArray([
+            ["ラベル1", "ラベル2"],
+            ["あい", "うえ"],
+            ["かき", "くけ"],
+        ])->toCsv()->getPath();
+        $this->assertEquals("ラベル1,ラベル2\nあい,うえ\nかき,くけ\n", file_get_contents($path));
+
+        $path = FileFabricate::fromCsv($path)->changeValue(2,"ラベル2", "グゲ")->toCsv()->getPath();
+        $this->assertEquals("ラベル1,ラベル2\nあい,うえ\nかき,グゲ\n", file_get_contents($path));
+    }
+
+//    public function test_テンプレートで生成した値の一部をCSVと指定した後でも変更できる() {
+//        $template = FileFabricate::defineTemplate([
+//            'label 1' => FileFabricate::value_integer(4),
+//            'label 2' => FileFabricate::value_string(3),
+//        ]);
+//        $path = $template->encodeTo("UTF-16LE")->rows(5)->changeValue(3, 'label 2', "ccc")->toCsv()->getPath();
+//        $expected = '"label 1","label 2"' . "\n" .
+//            "1,AAA\n" .
+//            "2,BBB\n" .
+//            "3,ccc\n" .
+//            "4,DDD\n" .
+//            "1,EEE\n";
+//        $this->assertEquals($expected, mb_convert_encoding(file_get_contents($path), "UTF-8", "UTF-16LE"));
+//    }
 }
  
