@@ -159,7 +159,11 @@ class FileFabricateFile {
         $this->data = $data;
     }
 
-    private function makeFile() {
+    private function makeFileIfNotExist() {
+        //作成済みなら省略
+        if (!empty($this->path)) {
+            return $this->path;
+        }
         //ファイルパス生成
         $path = $this->__tempnum();
 
@@ -198,35 +202,36 @@ class FileFabricateFile {
      * @return string
      */
     public function getPath() {
-        // 未作成なら作成する
-        if (empty($this->path)) {
-            $this->makeFile();
-        }
+        $this->makeFileIfNotExist();
         return $this->path;
     }
 
     public function encodeTo($encoding) {
         $this->encodeTo = $encoding;
-        $this->path = null;
+        $this->__resetFile();
         return $this;
     }
 
     public function prependUtf8Bom() {
         $this->bom = "\xef\xbb\xbf";
-        $this->path = null;
+        $this->__resetFile();
         return $this;
     }
 
     public function moveDirectoryTo($directory) {
         $this->directory = $directory;
-        $this->path = null;
+        $this->__resetFile();
         return $this;
     }
 
     public function changeFileNameTo($filename) {
         $this->filename = $filename;
-        $this->path = null;
+        $this->__resetFile();
         return $this;
+    }
+
+    private function __resetFile() {
+        $this->path = null;
     }
 
     private function __tempnum() {
