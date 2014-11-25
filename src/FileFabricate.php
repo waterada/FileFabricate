@@ -7,6 +7,8 @@
  * テスト後に(register_shutdown_functionで)自動的にファイルは削除される。
  */
 class FileFabricate {
+    private static $base_str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
     public static $dir = null;
 
     public static function from2DimensionalArray($data) {
@@ -17,8 +19,44 @@ class FileFabricate {
         return new FileFabricateFile($string);
     }
 
-    public static function defineTemplate() {
-        return new FileFabricateTemplate();
+    public static function defineTemplate($definition) {
+        return new FileFabricateTemplate($definition);
+    }
+
+    public static function value_integer($max = null) {
+        return self::value_callback(function ($i) use ($max) {
+            if ($max === null) {
+                $row = $i + 1;
+            } else {
+                $row = $i % $max + 1; //maxが指定されたらmax内をループする
+            }
+            return $row;
+        });
+    }
+
+    public static function value_string($size) {
+        $base = self::$base_str;
+        return self::value_callback(function ($i) use ($size, $base) {
+            $pos = $i % strlen($base);
+            return str_repeat($base[$pos], $size);
+        });
+    }
+
+    public static function value_date($format = 'Y-m-d H:i:s', $basedate = '2000-01-01 00:00:00') {
+        return self::value_callback(function ($i) use ($format, $basedate) {
+            return date($format, strtotime($basedate) + $i * 3600 * 24);
+        });
+    }
+
+    public static function value_rotation($array) {
+        return self::value_callback(function ($i) use ($array) {
+            $pos = $i % count($array);
+            return $array[$pos];
+        });
+    }
+
+    public static function value_callback($callback) {
+        return new FileFabricateFabricatorByLabel($callback);
     }
 }
 
@@ -32,8 +70,6 @@ class FileFabricateDataCells {
     private $cells = null; //２次元配列
 
     private $withoutBrAtEof = false;
-
-    private $changes = [];
 
     public function __construct($cells) {
         $this->cells = $cells;
@@ -231,45 +267,11 @@ class FileFabricateFile {
 
 
 class FileFabricateTemplate {
-    private static $base_str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
     /** @var FileFabricateFabricatorByLabel[]|mixed */
-    public $definition = null;
+    private $definition = null;
 
-    public function value_integer($max = null) {
-        return $this->value_callback(function ($i) use ($max) {
-            if ($max === null) {
-                $row = $i + 1;
-            } else {
-                $row = $i % $max + 1; //maxが指定されたらmax内をループする
-            }
-            return $row;
-        });
-    }
-
-    public function value_string($size) {
-        $base = self::$base_str;
-        return $this->value_callback(function ($i) use ($size, $base) {
-            $pos = $i % strlen($base);
-            return str_repeat($base[$pos], $size);
-        });
-    }
-
-    public function value_date($format = 'Y-m-d H:i:s', $basedate = '2000-01-01 00:00:00') {
-        return $this->value_callback(function ($i) use ($format, $basedate) {
-            return date($format, strtotime($basedate) + $i * 3600 * 24);
-        });
-    }
-
-    public function value_rotation($array) {
-        return $this->value_callback(function ($i) use ($array) {
-            $pos = $i % count($array);
-            return $array[$pos];
-        });
-    }
-
-    public function value_callback($callback) {
-        return new FileFabricateFabricatorByLabel($callback);
+    public function __construct($definition) {
+        $this->definition = $definition;
     }
 
     public function rows($count) {
@@ -281,7 +283,7 @@ class FileFabricateTemplate {
             $line = [];
             foreach ($this->definition as $label => $value) {
                 if (is_array($value)) {
-                    $value = $this->value_rotation($value);
+                    $value = FileFabricate::value_rotation($value);
                 }
                 if ($value instanceof FileFabricateFabricatorByLabel) {
                     $value = $value->_getValue($i);

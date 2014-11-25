@@ -203,20 +203,19 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
 
 
     public function test_データをテンプレートから作成できる() {
-        $template = FileFabricate::defineTemplate();
-        $template->definition = [
-            'label 1' => $template->value_integer(4),
-            'label 2' => $template->value_string(3)->format('%s@aaa.com'),
-            'label 3' => $template->value_date('Y-m-d H'),
-            'label 4' => $template->value_rotation(["T", "F"]),
-            'label 5' => $template->value_callback(function ($i) {
+        $template = FileFabricate::defineTemplate([
+            'label 1' => FileFabricate::value_integer(4),
+            'label 2' => FileFabricate::value_string(3)->format('%s@aaa.com'),
+            'label 3' => FileFabricate::value_date('Y-m-d H'),
+            'label 4' => FileFabricate::value_rotation(["T", "F"]),
+            'label 5' => FileFabricate::value_callback(function ($i) {
                     return "i:" . $i;
                 }),
             'label 6' => ["t", "f"],
             'label 7' => range(1, 5),
             'label 8' => "zzz",
             'label 9' => 99,
-        ];
+        ]);
         $path = $template->rows(10)->toCsv()->getPath();
         $expected = '"label 1","label 2","label 3","label 4","label 5","label 6","label 7","label 8","label 9"' . "\n" .
             "1,AAA@aaa.com,\"2000-01-01 00\",T,i:0,t,1,zzz,99\n" .
@@ -233,11 +232,10 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
     }
 
    public function test_テンプレートで生成した値の一部を変更できる() {
-       $template = FileFabricate::defineTemplate();
-       $template->definition = [
-           'label 1' => $template->value_integer(4),
-           'label 2' => $template->value_string(3),
-       ];
+       $template = FileFabricate::defineTemplate([
+           'label 1' => FileFabricate::value_integer(4),
+           'label 2' => FileFabricate::value_string(3),
+       ]);
        $path = $template->rows(5)->changeValue(3, 'label 2', "ccc")->toCsv()->getPath();
        $expected = '"label 1","label 2"' . "\n" .
            "1,AAA\n" .
