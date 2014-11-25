@@ -75,12 +75,8 @@ class FileFabricateDataCells {
         $this->cells = $cells;
     }
 
-    protected function _getCells() {
-        return $this->cells;
-    }
-
     public function toCsv($delimiter = ',', $enclosure = '"') {
-        $cells = $this->_getCells();
+        $cells = $this->cells;
         return new FileFabricateFile(function () use ($cells, $delimiter, $enclosure) {
             $fh_memory = fopen("php://memory", "rw");
             foreach ($cells as $row) {
