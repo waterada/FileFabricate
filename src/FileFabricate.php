@@ -46,15 +46,14 @@ class FileFabricateDataCells {
     public function toCsv($delimiter = ',', $enclosure = '"') {
         $cells = $this->_getCells();
         return new FileFabricateFile(function () use ($cells, $delimiter, $enclosure) {
-            $str = "";
+            $fh_memory = fopen("php://memory", "rw");
             foreach ($cells as $row) {
-                $fh_memory = fopen("php://memory", "rw");
                 fputcsv($fh_memory, $row, $delimiter, $enclosure);
-                $size = ftell($fh_memory);
-                fseek($fh_memory, 0);
-                $str .= fread($fh_memory, $size);
-                fclose($fh_memory);
             }
+            $size = ftell($fh_memory);
+            fseek($fh_memory, 0);
+            $str = fread($fh_memory, $size);
+            fclose($fh_memory);
             if ($this->withoutBrAtEof) {
                 $str = preg_replace('/\n$/', "", $str);
             }
