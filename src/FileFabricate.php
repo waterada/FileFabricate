@@ -118,21 +118,6 @@ class FileFabricateDataCells {
 }
 
 /**
- * Class FileFabricateDataTemplate
- *
- * csv/tsv を作成するためのテンプレートデータ
- */
-class FileFabricateDataTemplate extends FileFabricateDataCells {
-    private $template;
-
-    public function __construct($template) {
-        $this->template = $template;
-    }
-
-
-}
-
-/**
  * Class FileFabricateFile
  *
  * ファイル出力可能な文字列データ
