@@ -33,12 +33,12 @@ class FileFabricate {
         return new FileFabricateTemplate($definition);
     }
 
-    public static function value_integer($max = null) {
-        return self::value_callback(function ($i) use ($max) {
+    public static function value_integer($min = 1, $max = null) {
+        return self::value_callback(function ($i) use ($min, $max) {
             if ($max === null) {
-                $row = $i + 1;
+                $row = $i + $min;
             } else {
-                $row = $i % $max + 1; //maxが指定されたらmax内をループする
+                $row = $i % ($max - $min + 1) + $min; //maxが指定されたらmax内をループする
             }
             return $row;
         });

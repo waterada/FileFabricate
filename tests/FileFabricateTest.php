@@ -204,7 +204,7 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
 
     public function test_データをテンプレートから作成できる() {
         $template = FileFabricate::defineTemplate([
-            'label 1' => FileFabricate::value_integer(4),
+            'label 1' => FileFabricate::value_integer(1, 4),
             'label 2' => FileFabricate::value_string(3)->format('%s@aaa.com'),
             'label 3' => FileFabricate::value_date('Y-m-d H'),
             'label 4' => FileFabricate::value_rotation(["T", "F"]),
@@ -233,7 +233,7 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
 
     public function test_テンプレートで生成した値の一部を変更できる() {
         $template = FileFabricate::defineTemplate([
-            'label 1' => FileFabricate::value_integer(4),
+            'label 1' => FileFabricate::value_integer(1, 4),
             'label 2' => FileFabricate::value_string(3),
         ]);
         $path = $template->rows(5)->changeValue(3, 'label 2', "ccc")->toCsv()->getPath();
@@ -260,17 +260,16 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
 
     public function test_テンプレートで生成した値の一部をCSVと指定した後でも変更できる() {
         $template = FileFabricate::defineTemplate([
-            'label 1' => FileFabricate::value_integer(4),
+            'label 1' => FileFabricate::value_integer(2, 4),
             'label 2' => FileFabricate::value_string(3),
         ])->rows(5)->toCsv()->encodeTo("UTF-16LE");
         $path = $template->changeValue(3, 'label 2', "ccc")->getPath();
         $expected = '"label 1","label 2"' . "\n" .
-            "1,AAA\n" .
-            "2,BBB\n" .
-            "3,ccc\n" .
-            "4,DDD\n" .
-            "1,EEE\n";
+            "2,AAA\n" .
+            "3,BBB\n" .
+            "4,ccc\n" .
+            "2,DDD\n" .
+            "3,EEE\n";
         $this->assertEquals($expected, mb_convert_encoding(file_get_contents($path), "UTF-8", "UTF-16LE"));
     }
 }
- 
