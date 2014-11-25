@@ -143,7 +143,7 @@ class FileFabricateFile {
     private function makeFileIfNotExist() {
         //作成済みなら省略
         if (!empty($this->path)) {
-            return $this->path;
+            return;
         }
         //ファイルパス生成
         $path = $this->__tempnum();
