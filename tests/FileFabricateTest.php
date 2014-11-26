@@ -201,6 +201,63 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
 //        $this->assertEquals("あい,うえ\nがぎ,くけ\n", file_get_contents($path));
 //    }
 
+    public function provider_value_integer_値生成() {
+        return [
+            ["value_integer", 10, [0, 3], [0, 1, 2, 3, 0, 1, 2, 3, 0, 1]],
+            ["value_integer", 10, [-1, 2], [-1, 0, 1, 2, -1, 0, 1, 2, -1, 0]],
+            ["value_integer", 10, [2, 4], [2, 3, 4, 2, 3, 4, 2, 3, 4, 2]],
+            ["value_integer", 1000, [], range(1, 1000)],
+
+            ["value_string", 3, [1], explode(",", "A,B,C")],
+            ["value_string", 3, [2], explode(",", "AA,BB,CC")],
+            ["value_string", 3, [5], explode(",", "AAAAA,BBBBB,CCCCC")],
+            ["value_string", 26 * 3, [1], array_merge(range("A", "Z"), range("a", "z"), range("A", "Z"))],
+
+            ["value_date", 2, [], ['"2000-01-01 00:00:00"', '"2000-01-02 00:00:00"']],
+            ["value_date", 2, ['Y/m/d'], ['2000/01/01', '2000/01/02']],
+            ["value_date", 2, ['Y/m/d', '2015-02-01 00:00:00'], ['2015/02/01', '2015/02/02']],
+            ["value_date", 2, ['Y-m-d H:i:s', '2014-12-31 01:02:03'], ['"2014-12-31 01:02:03"', '"2015-01-01 01:02:03"']],
+
+            ["value_rotation", 6, [["abc", "123", "*+_"]], ["abc", "123", "*+_", "abc", "123", "*+_"]],
+
+            ["value_callback", 2, [function ($i) {
+                return "i:" . $i;
+            }], ["i:0", "i:1"]],
+
+            ["(LITERAL)", 5, ["T", "F"], ["T", "F", "T", "F", "T"]],
+            ["(LITERAL)", 5, range(3, 5), [3, 4, 5, 3, 4]],
+            ["(LITERAL)", 3, "あああ", ["あああ", "あああ", "あああ"]],
+            ["(LITERAL)", 3, 999, [999, 999, 999]],
+        ];
+    }
+
+    /**
+     * @dataProvider provider_value_integer_値生成
+     * @param $method
+     * @param $rows
+     * @param $args
+     * @param $expected
+     */
+    public function test_value_integer_値がローテーションして生成できる($method, $rows, $args, $expected) {
+        if ($method === "(LITERAL)") {
+            $path = FileFabricate::defineTemplate([
+                'label' => $args,
+            ])->rows($rows)->toCsv()->getPath();
+        } elseif (empty($args)) {
+            $path = FileFabricate::defineTemplate([
+                'label' => FileFabricate::$method(),
+            ])->rows($rows)->toCsv()->getPath();
+        } else {
+            $path = FileFabricate::defineTemplate([
+                'label' => call_user_func_array("FileFabricate::$method", $args),
+            ])->rows($rows)->toCsv()->getPath();
+        }
+        $this->assertEquals(
+            "label\n" . implode("\n", $expected) . "\n",
+            file_get_contents($path),
+            sprintf('%s(%s) : rows(%d) : %s', $method, var_export($args, true), $rows, implode(",", $expected))
+        );
+    }
 
     public function test_データをテンプレートから作成できる() {
         $template = FileFabricate::defineTemplate([
