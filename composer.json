@@ -1,6 +1,5 @@
 {
     "name": "waterada/FileFabricate",
-    "type": "cakephp-plugin",
     "description": "FileFabricate",
     "minimum-stability": "dev",
     "authors": [
@@ -16,13 +15,7 @@
             "url": "http://composer-proxy.jp/proxy/packagist"
         }
     ],
-    "require": {
-        "composer/installers": "*"
-    },
     "require-dev": {
         "phpunit/phpunit": "3.7.*"
-    },
-    "extra": {
-        "installer-name": "FileFabricate"
     }
 }
