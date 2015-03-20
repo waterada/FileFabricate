@@ -98,3 +98,28 @@ $template = FileFabricate::defineTemplate([
 ])->rows(5)->toCsv()->encodeTo("UTF-16LE");
 $path = $template->change_value(3, 'label 2', "ccc")->getPath();
 ```
+
+Install
+-------------
+
+- composer.json に下記を記述してください。(Please write the following into your composer.json.)
+
+  - `"repositories": []` のパートに下記を追加 (inside the `"repositories": []` part):
+
+  ```
+        {
+            "type": "git",
+            "url": "git@github.com:waterada/FileFabricate.git"
+        }
+  ```
+
+  - `"require-dev": {}` のパートに下記を追加 (inside the `"require-dev": {}` part):
+
+  ```
+        "waterada/FileFabricate": "1.1.*"
+  ```
+
+- `comoposer update waterada/FileFabricate` を実行してください。(Please run `comoposer update waterada/FileFabricate`.)
+
+以上で使えるようになります。
+That's all.
