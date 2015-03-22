@@ -55,10 +55,18 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
         );
     }
 
-    public function test_文字エンコーディングを指定_文字列() {
+    public function test_文字エンコーディングを指定_文字列_SJIS() {
         $path = FileFabricate::fromString("あいうえお")->encodeTo("SJIS")->getPath();
         $this->assertEquals(
             bin2hex(mb_convert_encoding("あいうえお", "SJIS", "UTF-8")),
+            bin2hex(file_get_contents($path))
+        );
+    }
+
+    public function test_文字エンコーディングを指定_文字列_UTF16LE() {
+        $path = FileFabricate::fromString("あいうえお")->encodeTo("UTF-16LE")->getPath();
+        $this->assertEquals(
+            bin2hex("\xff\xfe" . mb_convert_encoding("あいうえお", "UTF-16LE", "UTF-8")), //BOMも付いている
             bin2hex(file_get_contents($path))
         );
     }
