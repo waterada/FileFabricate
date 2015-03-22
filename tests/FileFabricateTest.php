@@ -55,18 +55,10 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
         );
     }
 
-    public function test_文字エンコーディングを指定_文字列_SJIS() {
+    public function test_文字エンコーディングを指定_文字列() {
         $path = FileFabricate::fromString("あいうえお")->encodeTo("SJIS")->getPath();
         $this->assertEquals(
             bin2hex(mb_convert_encoding("あいうえお", "SJIS", "UTF-8")),
-            bin2hex(file_get_contents($path))
-        );
-    }
-
-    public function test_文字エンコーディングを指定_文字列_UTF16LE() {
-        $path = FileFabricate::fromString("あいうえお")->encodeTo("UTF-16LE")->getPath();
-        $this->assertEquals(
-            bin2hex("\xff\xfe" . mb_convert_encoding("あいうえお", "UTF-16LE", "UTF-8")), //BOMも付いている
             bin2hex(file_get_contents($path))
         );
     }
@@ -174,28 +166,28 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
      */
     public function provider_文字エンコーディング() {
         return [
-            ['SJIS'],
-            ['SJIS-win'],
-            ['CP932'],
-            ['UTF-16LE'],
-            ['IsO-2022-jp'], //JIS
-            ['GB2312'], //簡体字
-            ['BIG5'], //繁体字
+            ['SJIS', ''],
+            ['SJIS-win', ''],
+            ['CP932', ''],
+            ['UTF-16LE', "\xff\xfe"],
+            ['IsO-2022-jp', ''], //JIS
+            ['GB2312', ''], //簡体字
+            ['BIG5', ''], //繁体字
             //['ISO-8859-11'], //タイ語(サポートされていない)
-            ['KOI8-R'], //ロシア語
-            ['SJIS'],
+            ['KOI8-R', ''], //ロシア語
         ];
     }
 
     /**
      * @dataProvider provider_文字エンコーディング
      * @param $encodeTo
+     * @param $bom
      */
-    public function test_文字エンコーディングを指定して出力できること($encodeTo) {
+    public function test_文字エンコーディングを指定して出力できること($encodeTo, $expectedBom) {
         $path = FileFabricate::fromString("あいう")->encodeTo($encodeTo)->getPath();
 
         $this->assertEquals(
-            bin2hex(mb_convert_encoding("あいう", $encodeTo, "UTF-8")),
+            bin2hex($expectedBom . mb_convert_encoding("あいう", $encodeTo, "UTF-8")),
             bin2hex(file_get_contents($path)),
             $encodeTo);
     }
@@ -329,12 +321,12 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
             'label 2' => FileFabricate::value_string(3),
         ])->rows(5)->toCsv()->encodeTo("UTF-16LE");
         $path = $template->changeValue(3, 'label 2', "ccc")->getPath();
-        $expected = "\xff\xfe" . '"label 1","label 2"' . "\n" .
+        $expected = "\xff\xfe" . mb_convert_encoding('"label 1","label 2"' . "\n" .
             "2,AAA\n" .
             "3,BBB\n" .
             "4,ccc\n" .
             "2,DDD\n" .
-            "3,EEE\n";
-        $this->assertEquals($expected, mb_convert_encoding(file_get_contents($path), "UTF-8", "UTF-16LE"));
+            "3,EEE\n", "UTF-8", "UTF-16LE");
+        $this->assertEquals(bin2hex($expected), bin2hex(file_get_contents($path)));
     }
 }
