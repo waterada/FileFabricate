@@ -176,6 +176,9 @@ class FileFabricateFile {
 
     public function encodeTo($encoding) {
         $this->settings->encodeTo = $encoding;
+        if ($encoding === 'UTF-16LE') {
+            $this->settings->bom = "\xff\xfe";
+        }
         $this->__resetFile();
         return $this;
     }
