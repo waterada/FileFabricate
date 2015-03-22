@@ -326,7 +326,7 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
             "3,BBB\n" .
             "4,ccc\n" .
             "2,DDD\n" .
-            "3,EEE\n", "UTF-8", "UTF-16LE");
+            "3,EEE\n", "UTF-16LE", "UTF-8");
         $this->assertEquals(bin2hex($expected), bin2hex(file_get_contents($path)));
     }
 }
