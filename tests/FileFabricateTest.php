@@ -329,7 +329,7 @@ class FileFabricateTest extends PHPUnit_Framework_TestCase {
             'label 2' => FileFabricate::value_string(3),
         ])->rows(5)->toCsv()->encodeTo("UTF-16LE");
         $path = $template->changeValue(3, 'label 2', "ccc")->getPath();
-        $expected = '"label 1","label 2"' . "\n" .
+        $expected = "\xff\xfe" . '"label 1","label 2"' . "\n" .
             "2,AAA\n" .
             "3,BBB\n" .
             "4,ccc\n" .
